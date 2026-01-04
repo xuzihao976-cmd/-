@@ -65,10 +65,12 @@ const StartScreen: React.FC<StartScreenProps> = ({ onNewGame, onOpenLoadMenu, ha
             
             <button
             onClick={onNewGame}
-            className="w-full py-4 bg-red-950/20 border border-red-900/40 hover:bg-red-900/30 hover:border-red-600 text-neutral-200 font-bold tracking-widest transition-all duration-300 shadow-lg transform hover:scale-[1.02] active:scale-95 relative overflow-hidden font-yahei group"
+            // Removed active:scale-95 to prevent Android touch cancellation issues
+            className="w-full py-4 bg-red-950/20 border border-red-900/40 hover:bg-red-900/30 hover:border-red-600 text-neutral-200 font-bold tracking-widest transition-all duration-300 shadow-lg relative overflow-hidden font-yahei group active:bg-red-900/40"
             >
-                <div className="absolute inset-0 bg-red-900/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"></div>
-                <span className="relative z-10 flex items-center justify-center gap-2">
+                {/* Added pointer-events-none to inner div */}
+                <div className="absolute inset-0 bg-red-900/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out pointer-events-none"></div>
+                <span className="relative z-10 flex items-center justify-center gap-2 pointer-events-none">
                     <span className="w-1.5 h-1.5 bg-red-600 rotate-45"></span>
                     开始新战役
                     <span className="w-1.5 h-1.5 bg-red-600 rotate-45"></span>
@@ -78,20 +80,21 @@ const StartScreen: React.FC<StartScreenProps> = ({ onNewGame, onOpenLoadMenu, ha
             <button
             onClick={onOpenLoadMenu}
             disabled={!hasSaves}
-            className={`w-full py-3 bg-neutral-900/80 border border-neutral-700 text-amber-500 font-bold tracking-widest transition-all duration-300 shadow-lg flex flex-col items-center gap-1 font-yahei ${hasSaves ? 'hover:bg-neutral-800 hover:border-amber-700/50 transform hover:scale-[1.02] active:scale-95' : 'opacity-40 cursor-not-allowed grayscale'}`}
+            // Removed active:scale-95
+            className={`w-full py-3 bg-neutral-900/80 border border-neutral-700 text-amber-500 font-bold tracking-widest transition-all duration-300 shadow-lg flex flex-col items-center gap-1 font-yahei ${hasSaves ? 'hover:bg-neutral-800 hover:border-amber-700/50 active:bg-neutral-800' : 'opacity-40 cursor-not-allowed grayscale'}`}
             >
                 <span>读取作战记录</span>
             </button>
 
             <button
                 onClick={() => setShowAchievements(true)}
-                className="w-full py-2 bg-transparent text-neutral-600 hover:text-neutral-400 transition-colors text-xs tracking-wider font-yahei flex justify-center items-center gap-1"
+                className="w-full py-2 bg-transparent text-neutral-600 hover:text-neutral-400 transition-colors text-xs tracking-wider font-yahei flex justify-center items-center gap-1 active:text-neutral-200"
             >
                 <span>🎖</span> 查看勋章墙 ({unlockedAchievements.length}/{ACHIEVEMENTS.length})
             </button>
             
             <div className="text-[10px] text-neutral-700 text-center mt-4 font-yahei leading-relaxed select-none">
-                v1.4.1 | 沉浸式历史体验
+                v1.4.2 | 沉浸式历史体验
             </div>
       </div>
       
@@ -113,7 +116,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onNewGame, onOpenLoadMenu, ha
                     </div>
                     <button 
                         onClick={() => setShowAchievements(false)} 
-                        className="text-neutral-500 hover:text-white px-2 text-2xl transition-colors w-10 h-10 flex items-center justify-center border border-transparent hover:border-neutral-700 rounded"
+                        className="text-neutral-500 hover:text-white px-2 text-2xl transition-colors w-10 h-10 flex items-center justify-center border border-transparent hover:border-neutral-700 rounded active:bg-neutral-800"
                     >
                         ✕
                     </button>

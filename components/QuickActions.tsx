@@ -30,7 +30,8 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onAction, disabled, stats }
             key={act.label}
             onClick={() => onAction(act.cmd)}
             disabled={disabled}
-            className={`flex-1 flex items-center justify-center whitespace-nowrap px-1 py-2.5 rounded border bg-neutral-900/80 hover:bg-neutral-800 text-[10px] sm:text-xs font-yahei font-bold transition-colors active:scale-95 disabled:opacity-50 shadow-sm ${act.color}`}
+            // Removed active:scale-95, added active:opacity-70 for better touch feedback
+            className={`flex-1 flex items-center justify-center whitespace-nowrap px-1 py-2.5 rounded border bg-neutral-900/80 hover:bg-neutral-800 text-[10px] sm:text-xs font-yahei font-bold transition-colors active:opacity-70 disabled:opacity-50 shadow-sm ${act.color}`}
         >
             {act.label}
         </button>

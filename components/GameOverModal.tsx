@@ -112,13 +112,13 @@ const GameOverModal: React.FC<GameOverModalProps> = ({ stats, onRestart, onExit 
         <div className="flex flex-col gap-3 mt-4 z-10">
             <button 
                 onClick={onRestart} 
-                className="w-full py-3 bg-neutral-100 hover:bg-white text-black font-bold tracking-widest rounded shadow-lg transition-transform active:scale-95"
+                className="w-full py-3 bg-neutral-100 hover:bg-white text-black font-bold tracking-widest rounded shadow-lg transition-transform active:opacity-80"
             >
                 再次挑战
             </button>
             <button 
                 onClick={onExit} 
-                className="w-full py-3 bg-transparent border border-neutral-700 text-neutral-400 hover:text-white hover:border-neutral-500 rounded transition-colors"
+                className="w-full py-3 bg-transparent border border-neutral-700 text-neutral-400 hover:text-white hover:border-neutral-500 rounded transition-colors active:bg-neutral-800"
             >
                 返回主菜单
             </button>
