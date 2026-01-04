@@ -53,12 +53,12 @@ const TacticalMap: React.FC<TacticalMapProps> = ({ stats, onAction, attackLocati
       const isUnderAttack = flashingLoc === loc;
       const level = stats.fortificationLevel[loc] || 0;
       const count = stats.fortificationBuildCounts?.[loc] || 0;
-      const isBuilding = count % 2 !== 0;
+      // FIX: Ensure not showing building if already max level (prevents odd state UI bug)
+      const isBuilding = count % 2 !== 0 && level < 3;
       const soldierCount = stats.soldierDistribution?.[loc] || 0;
       
-      // HMG Logic
-      const hmgSquads = stats.hmgSquads ? stats.hmgSquads.filter(s => s.location === loc && s.status === 'active') : [];
-      const hasHmg = hmgSquads.length > 0;
+      // HMG Logic - Show all squads assigned here, even if destroyed (for visibility)
+      const hmgSquads = stats.hmgSquads ? stats.hmgSquads.filter(s => s.location === loc) : [];
 
       // Flag Logic (Roof only)
       const showFlag = isRoof && stats.hasFlagRaised;
@@ -155,15 +155,27 @@ const TacticalMap: React.FC<TacticalMapProps> = ({ stats, onAction, attackLocati
                  
                  {/* HMG Turrets */}
                  <div className="flex gap-2 items-center">
-                    {hmgSquads.map((_, i) => (
-                        <div key={i} className="relative group/hmg" title="机枪连部署中">
+                    {hmgSquads.map((squad, i) => (
+                        <div key={i} className={`relative group/hmg ${squad.status === 'destroyed' ? 'opacity-50 grayscale' : ''}`} title={`${squad.name} (${squad.status === 'destroyed' ? '已毁' : '部署中'})`}>
                             {/* Base */}
                             <div className="w-6 h-3 bg-neutral-800 rounded-sm border border-neutral-600 relative z-10"></div>
                             {/* Barrel */}
-                            <div className="absolute top-1 -right-2 w-3 h-1 bg-neutral-500"></div>
-                            {/* Flash Animation */}
-                            <div className="absolute top-0 -right-4 w-4 h-3 bg-orange-500/0 rounded-full animate-ping-fast"></div>
-                            <div className="absolute -top-3 left-0 text-[8px] text-orange-500 font-bold opacity-0 group-hover/hmg:opacity-100 transition-opacity">HMG</div>
+                            {squad.status !== 'destroyed' && (
+                                <div className="absolute top-1 -right-2 w-3 h-1 bg-neutral-500"></div>
+                            )}
+                            {/* Debris for destroyed */}
+                            {squad.status === 'destroyed' && (
+                                <div className="absolute inset-0 flex items-center justify-center z-20">
+                                    <span className="text-[8px] text-red-600 font-bold">✕</span>
+                                </div>
+                            )}
+                            {/* Flash Animation for Active */}
+                            {squad.status === 'active' && (
+                                <>
+                                    <div className="absolute top-0 -right-4 w-4 h-3 bg-orange-500/0 rounded-full animate-ping-fast"></div>
+                                    <div className="absolute -top-3 left-0 text-[8px] text-orange-500 font-bold opacity-0 group-hover/hmg:opacity-100 transition-opacity">HMG</div>
+                                </>
+                            )}
                         </div>
                     ))}
                  </div>
@@ -266,3 +278,4 @@ const TacticalMap: React.FC<TacticalMapProps> = ({ stats, onAction, attackLocati
 };
 
 export default TacticalMap;
+    

@@ -50,7 +50,7 @@ export const INITIAL_STATS: GameStats = {
   ammo: 45000,          
   machineGunAmmo: 18000,
   grenades: 1000,       
-  sandbags: 4500,       
+  sandbags: 5000,       
   medkits: 40,          
 
   hasFlagRaised: false,
@@ -124,3 +124,4 @@ export const SYSTEM_INSTRUCTION = `
 你是一个纯文字互动冒险游戏《孤军：四行1937》的“游戏叙述者”。
 玩家扮演谢晋元团附，指挥国军第88师524团一营（共414人）。
 `;
+    

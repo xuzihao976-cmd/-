@@ -535,7 +535,12 @@ export const generateGameTurn = async (
                 if (isTrap) {
                      resolveText = "【自杀袭击】“板载！”那几个伪军突然拉响了身上的炸药包！巨大的爆炸震塌了仓库的一角。";
                      const oldLv = currentStats.fortificationLevel['一楼入口'];
-                     calculatedStats.fortificationLevel = { ...currentStats.fortificationLevel, '一楼入口': Math.max(0, oldLv - 1) };
+                     const newLv = Math.max(0, oldLv - 1);
+                     
+                     calculatedStats.fortificationLevel = { ...currentStats.fortificationLevel, '一楼入口': newLv };
+                     // FIX: SYNC BUILD COUNTS
+                     calculatedStats.fortificationBuildCounts = { ...currentStats.fortificationBuildCounts, '一楼入口': newLv * 2 };
+                     
                      statsLog.push("🏚️ 一楼工事等级 -1");
                      visualEffect = 'heavy-damage';
                      playSound('explosion');
@@ -1049,19 +1054,27 @@ export const generateGameTurn = async (
         calculatedStats.wounded = Math.max(0, currentWounded - Math.min(currentWounded, Math.ceil(outcome.casualtyCount * 0.3)) + injuries);
         calculatedStats.soldiers = Math.max(0, currentHealthy - (deaths - (Math.min(currentWounded, Math.ceil(outcome.casualtyCount * 0.3)))) - injuries);
         
-        // HMG Destruction Risk 
+        // HMG Destruction Risk & Damage Logic (Fixed)
         if (activeSquadsCount > 0 && (attackScale === 'LARGE' || damageType !== 'INFANTRY')) {
             if (Math.random() < 0.3) {
                 const targetIdx = ammoCheckSquads.findIndex(s => s.status === 'active');
                 if (targetIdx !== -1) {
-                    ammoCheckSquads[targetIdx] = { ...ammoCheckSquads[targetIdx], status: 'destroyed', count: 0 };
-                    statsLog.push(`🔴 ${ammoCheckSquads[targetIdx].name}被毁!`);
+                    // FIX: Instead of instant kill, reduce count.
+                    const damage = Math.floor(Math.random() * 10) + 5; // Lost 5-15 men
+                    const newCount = Math.max(0, ammoCheckSquads[targetIdx].count - damage);
                     
-                    // Morale Penalty for HMG Loss
-                    currentMorale = Math.max(0, currentMorale - 15);
-                    statsLog.push(`💔 重火力折损: 士气 -15`);
-                    
-                    deaths += 5; // Extra deaths from crew
+                    if (newCount <= 0) {
+                         ammoCheckSquads[targetIdx] = { ...ammoCheckSquads[targetIdx], status: 'destroyed', count: 0 };
+                         statsLog.push(`🔴 ${ammoCheckSquads[targetIdx].name}全员阵亡，阵地被毁!`);
+                         currentMorale = Math.max(0, currentMorale - 15);
+                         statsLog.push(`💔 重火力折损: 士气 -15`);
+                    } else {
+                         ammoCheckSquads[targetIdx] = { ...ammoCheckSquads[targetIdx], count: newCount };
+                         statsLog.push(`⚠️ ${ammoCheckSquads[targetIdx].name}遭遇重创，伤亡${damage}人!`);
+                         // Minor morale hit
+                         currentMorale = Math.max(0, currentMorale - 5);
+                         statsLog.push(`💔 惨烈死伤: 士气 -5`);
+                    }
                 }
                 calculatedStats.hmgSquads = ammoCheckSquads;
             }
@@ -1078,6 +1091,11 @@ export const generateGameTurn = async (
             if (curLv > 0) {
                 const newLv = curLv - 1;
                 calculatedStats.fortificationLevel = { ...(calculatedStats.fortificationLevel || currentStats.fortificationLevel), [target]: newLv };
+                
+                // FIX: Sync build counts so upgrades take consistent effort (2 builds per level)
+                const curCounts = calculatedStats.fortificationBuildCounts || currentStats.fortificationBuildCounts;
+                calculatedStats.fortificationBuildCounts = { ...curCounts, [target]: newLv * 2 };
+                
                 narrativeParts.push("\n\n" + pick(FORT_DAMAGE_SCENES));
                 statsLog.push(`🏚️ ${target}工事损毁 (Lv.${newLv})`);
             }
@@ -1246,3 +1264,4 @@ export const generateGameTurn = async (
         enemyIntel: ENEMY_INTEL_BY_DAY[Math.min(finalDay, 6)]
     };
 };
+    
