@@ -9,14 +9,17 @@
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap');
       
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
       body {
         font-family: 'Noto Serif SC', serif;
-        background-color: #111;
+        background-color: #050505; /* Dark background for desktop margins */
         color: #e5e5e5;
-        overflow: hidden; /* Prevent body scroll on mobile */
-        height: 100%;
-        width: 100%;
-        position: fixed; /* Fix for iOS rubber banding */
+        overflow: hidden; /* App handles scrolling */
       }
       
       .font-yahei {

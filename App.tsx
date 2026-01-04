@@ -474,220 +474,236 @@ const App: React.FC = () => {
     visualEffect === 'heavy-damage' ? 'effect-shake effect-damage' : '';
 
   return (
-    // Fixed inset-0 is better for mobile keyboards than h-screen or 100dvh
-    <div className={`fixed inset-0 flex flex-col max-w-md mx-auto bg-[#111] text-[#ddd] overflow-hidden shadow-2xl border-x border-neutral-800 relative ${containerEffectClass}`}>
-      
-      {/* Modals */}
-      {showSaveLoadModal && (
-          <SaveLoadModal 
-            mode={modalMode} 
-            slots={saveSlots} 
-            onClose={() => setShowSaveLoadModal(false)}
-            onSelectSlot={(id) => {
-                if (modalMode === 'save') {
-                    if (saveSlots[id].isEmpty || window.confirm(`确认覆盖 存档 ${id+1} 吗？`)) {
-                        handleSaveToSlot(id);
+    // OUTER CONTAINER: Handles Desktop vs Mobile Environment
+    <div className="w-full h-[100dvh] bg-zinc-950 flex items-center justify-center overflow-hidden">
+        
+        {/* INNER CONTAINER (GAME FRAME): 
+            Mobile: fixed inset-0 (Full screen, no borders)
+            Desktop (sm+): Relative, centered, fixed size (Phone Simulator) 
+        */}
+        <div className={`
+            w-full h-full 
+            sm:w-[450px] sm:h-[90dvh] sm:max-h-[850px]
+            bg-[#111] text-[#ddd] 
+            flex flex-col 
+            relative 
+            overflow-hidden 
+            sm:rounded-xl sm:border sm:border-neutral-800 sm:shadow-2xl
+            ${containerEffectClass}
+        `}>
+          
+          {/* Modals */}
+          {showSaveLoadModal && (
+              <SaveLoadModal 
+                mode={modalMode} 
+                slots={saveSlots} 
+                onClose={() => setShowSaveLoadModal(false)}
+                onSelectSlot={(id) => {
+                    if (modalMode === 'save') {
+                        if (saveSlots[id].isEmpty || window.confirm(`确认覆盖 存档 ${id+1} 吗？`)) {
+                            handleSaveToSlot(id);
+                        }
+                    } else {
+                        if (saveSlots[id].isEmpty) return;
+                        handleLoadFromSlot(id);
                     }
-                } else {
-                    if (saveSlots[id].isEmpty) return;
-                    handleLoadFromSlot(id);
-                }
-            }}
-          />
-      )}
-      
-      {currentDilemma && (
-          <DilemmaModal dilemma={currentDilemma} onChoice={(cmd) => {
-              const opt = currentDilemma.options.find(o => o.actionCmd === cmd);
-              handleDilemmaChoice(cmd, opt?.label || "做出选择");
-          }} />
-      )}
-      
-      {stats.activeTacticalCard && (
-          <TacticalCardDisplay 
-              card={stats.activeTacticalCard} 
-              onExecute={(cmd) => handleTacticalCardExecute(cmd, stats.activeTacticalCard?.title || "")} 
-          />
-      )}
-
-      {/* NEW: Game Over Modal - Triggered by Delayed State */}
-      {showGameOverModal && (
-          <GameOverModal 
-            stats={stats} 
-            onRestart={handleNewGame} 
-            onExit={handleConfirmExit} 
-          />
-      )}
-      
-      <AdvisorChat isOpen={showAdvisor} onClose={() => setShowAdvisor(false)} />
-
-      {view === 'MENU' ? (
-          <StartScreen 
-            onNewGame={handleNewGame} 
-            onOpenLoadMenu={openLoadModal} 
-            hasSaves={hasAnySave()} 
-            unlockedAchievements={unlockedAchievements}
-          />
-      ) : (
-        <>
-            {showGameMenu && (
-                <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-neutral-900 border border-neutral-700 p-6 rounded-lg shadow-2xl w-full max-w-sm relative">
-                        <h3 className="text-xl font-bold text-neutral-200 mb-6 text-center border-b border-neutral-800 pb-2">战时菜单</h3>
-                        {!confirmExit ? (
-                            <div className="space-y-3">
-                                <button onClick={() => { playSound('click'); setShowGameMenu(false); }} className="w-full py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded transition-colors">
-                                    返回前线
-                                </button>
-                                <button onClick={openSaveModal} className="w-full py-3 bg-neutral-800 hover:bg-amber-900/30 text-amber-500 rounded border border-neutral-700 transition-colors">
-                                    保存进度
-                                </button>
-                                <button onClick={handleExitRequest} className="w-full py-3 bg-red-900/20 hover:bg-red-900/40 text-red-500 rounded border border-red-900/30 transition-colors">
-                                    撤出战场
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="space-y-3 text-center">
-                                <p className="text-red-400 text-sm mb-4">确定要撤离吗？<br/>未归档的战报将会丢失。</p>
-                                <button onClick={handleConfirmExit} className="w-full py-3 bg-red-800 hover:bg-red-700 text-white rounded font-bold">
-                                    确认撤离
-                                </button>
-                                <button onClick={() => { playSound('click'); setConfirmExit(false); }} className="w-full py-3 bg-neutral-700 hover:bg-neutral-600 text-neutral-300 rounded">
-                                    取消
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            <StatsPanel stats={stats} enemyIntel={enemyIntel} />
-
-            <div className="bg-neutral-900 border-b border-neutral-800 px-4 py-1 flex justify-center z-10 relative shrink-0">
-                <button 
-                    onClick={() => { playSound('click'); setShowMap(!showMap); }}
-                    className="text-[10px] text-neutral-500 hover:text-neutral-300 uppercase tracking-widest flex items-center gap-1"
-                >
-                    {showMap ? '▼ 隐藏地图' : '▲ 显示地图'}
-                </button>
-            </div>
-
-            {/* Map Container: Restricted height with scroll to prevent blocking chat */}
-            {showMap && (
-                <div className="shrink-0 border-b border-neutral-800 bg-[#0a0a0a] max-h-[30vh] overflow-y-auto custom-scrollbar">
-                    <TacticalMap stats={stats} onAction={(cmd) => handleCommand(undefined, cmd)} attackLocation={attackLocation} />
-                </div>
-            )}
-
-            <div 
-                ref={scrollRef}
-                className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 scroll-smooth font-mono min-h-0"
-                onClick={() => {
-                    const lastLog = logs[logs.length - 1];
-                    if (lastLog?.isTyping) finishTyping(lastLog.id);
                 }}
-            >
-                {logs.map((log) => (
-                <div 
-                    key={log.id} 
-                    className={`flex flex-col ${log.sender === 'user' ? 'items-end' : 'items-start'}`}
-                >
-                    <div className={`max-w-[95%] sm:max-w-[90%] ${
-                    log.sender === 'user' 
-                        ? 'text-neutral-400 font-mono text-sm border-l-2 border-neutral-600 pl-3' 
-                        : 'text-gray-300 text-sm sm:text-base leading-loose'
-                    }`}>
-                    {log.sender === 'system' && log.isTyping ? (
-                        <Typewriter 
-                            text={log.text} 
-                            speed={15} 
-                            onComplete={() => finishTyping(log.id)} 
-                        />
-                    ) : (
-                        <span className="whitespace-pre-wrap">{log.text}</span>
-                    )}
-                    </div>
-                </div>
-                ))}
+              />
+          )}
+          
+          {currentDilemma && (
+              <DilemmaModal dilemma={currentDilemma} onChoice={(cmd) => {
+                  const opt = currentDilemma.options.find(o => o.actionCmd === cmd);
+                  handleDilemmaChoice(cmd, opt?.label || "做出选择");
+              }} />
+          )}
+          
+          {stats.activeTacticalCard && (
+              <TacticalCardDisplay 
+                  card={stats.activeTacticalCard} 
+                  onExecute={(cmd) => handleTacticalCardExecute(cmd, stats.activeTacticalCard?.title || "")} 
+              />
+          )}
 
-                {isLoading && (
-                <div className="flex items-center gap-2 text-neutral-500 animate-pulse text-xs font-mono">
-                    <span>[通讯连接中...]</span>
+          {/* NEW: Game Over Modal - Triggered by Delayed State */}
+          {showGameOverModal && (
+              <GameOverModal 
+                stats={stats} 
+                onRestart={handleNewGame} 
+                onExit={handleConfirmExit} 
+              />
+          )}
+          
+          <AdvisorChat isOpen={showAdvisor} onClose={() => setShowAdvisor(false)} />
+
+          {view === 'MENU' ? (
+              <StartScreen 
+                onNewGame={handleNewGame} 
+                onOpenLoadMenu={openLoadModal} 
+                hasSaves={hasAnySave()} 
+                unlockedAchievements={unlockedAchievements}
+              />
+          ) : (
+            <>
+                {showGameMenu && (
+                    <div className="absolute inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+                        <div className="bg-neutral-900 border border-neutral-700 p-6 rounded-lg shadow-2xl w-full max-w-sm relative">
+                            <h3 className="text-xl font-bold text-neutral-200 mb-6 text-center border-b border-neutral-800 pb-2">战时菜单</h3>
+                            {!confirmExit ? (
+                                <div className="space-y-3">
+                                    <button onClick={() => { playSound('click'); setShowGameMenu(false); }} className="w-full py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded transition-colors">
+                                        返回前线
+                                    </button>
+                                    <button onClick={openSaveModal} className="w-full py-3 bg-neutral-800 hover:bg-amber-900/30 text-amber-500 rounded border border-neutral-700 transition-colors">
+                                        保存进度
+                                    </button>
+                                    <button onClick={handleExitRequest} className="w-full py-3 bg-red-900/20 hover:bg-red-900/40 text-red-500 rounded border border-red-900/30 transition-colors">
+                                        撤出战场
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-3 text-center">
+                                    <p className="text-red-400 text-sm mb-4">确定要撤离吗？<br/>未归档的战报将会丢失。</p>
+                                    <button onClick={handleConfirmExit} className="w-full py-3 bg-red-800 hover:bg-red-700 text-white rounded font-bold">
+                                        确认撤离
+                                    </button>
+                                    <button onClick={() => { playSound('click'); setConfirmExit(false); }} className="w-full py-3 bg-neutral-700 hover:bg-neutral-600 text-neutral-300 rounded">
+                                        取消
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                <StatsPanel stats={stats} enemyIntel={enemyIntel} />
+
+                <div className="bg-neutral-900 border-b border-neutral-800 px-4 py-1 flex justify-center z-10 relative shrink-0">
                     <button 
-                        onClick={() => setIsLoading(false)} 
-                        className="ml-2 text-[10px] underline text-red-500/50 hover:text-red-500"
-                        title="如果长时间无响应，点击此处强制取消等待"
+                        onClick={() => { playSound('click'); setShowMap(!showMap); }}
+                        className="text-[10px] text-neutral-500 hover:text-neutral-300 uppercase tracking-widest flex items-center gap-1"
                     >
-                        (强制重置)
+                        {showMap ? '▼ 隐藏地图' : '▲ 显示地图'}
                     </button>
                 </div>
-                )}
-            </div>
 
-            <div className="bg-[#1a1a1a] p-2 border-t border-neutral-700 z-20 relative flex flex-col gap-2 shrink-0 pb-safe">
-                
-                {!stats.isGameOver && (
-                    <div className="flex justify-between items-center px-1 mb-1">
-                        <div className="flex gap-2">
-                             <button 
-                                onClick={() => { playSound('click'); setShowAdvisor(true); }}
-                                className="flex items-center gap-1 px-3 py-1 text-xs text-green-500/90 hover:text-green-400 bg-neutral-900 rounded border border-green-900/50 transition-colors"
-                            >
-                                <span>☍</span> 战地顾问
-                            </button>
+                {/* Map Container: Restricted height with scroll to prevent blocking chat */}
+                {showMap && (
+                    <div className="shrink-0 border-b border-neutral-800 bg-[#0a0a0a] max-h-[30vh] overflow-y-auto custom-scrollbar">
+                        <TacticalMap stats={stats} onAction={(cmd) => handleCommand(undefined, cmd)} attackLocation={attackLocation} />
+                    </div>
+                )}
+
+                <div 
+                    ref={scrollRef}
+                    className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 scroll-smooth font-mono min-h-0"
+                    onClick={() => {
+                        const lastLog = logs[logs.length - 1];
+                        if (lastLog?.isTyping) finishTyping(lastLog.id);
+                    }}
+                >
+                    {logs.map((log) => (
+                    <div 
+                        key={log.id} 
+                        className={`flex flex-col ${log.sender === 'user' ? 'items-end' : 'items-start'}`}
+                    >
+                        <div className={`max-w-[95%] sm:max-w-[90%] ${
+                        log.sender === 'user' 
+                            ? 'text-neutral-400 font-mono text-sm border-l-2 border-neutral-600 pl-3' 
+                            : 'text-gray-300 text-sm sm:text-base leading-loose'
+                        }`}>
+                        {log.sender === 'system' && log.isTyping ? (
+                            <Typewriter 
+                                text={log.text} 
+                                speed={15} 
+                                onComplete={() => finishTyping(log.id)} 
+                            />
+                        ) : (
+                            <span className="whitespace-pre-wrap">{log.text}</span>
+                        )}
                         </div>
+                    </div>
+                    ))}
+
+                    {isLoading && (
+                    <div className="flex items-center gap-2 text-neutral-500 animate-pulse text-xs font-mono">
+                        <span>[通讯连接中...]</span>
                         <button 
-                            onClick={() => {
-                                playSound('click');
-                                setShowGameMenu(true);
-                                setConfirmExit(false);
-                            }}
-                            className="flex items-center gap-1 px-3 py-1 text-xs text-neutral-400 hover:text-white bg-neutral-900 rounded border border-neutral-700 transition-colors"
+                            onClick={() => setIsLoading(false)} 
+                            className="ml-2 text-[10px] underline text-red-500/50 hover:text-red-500"
+                            title="如果长时间无响应，点击此处强制取消等待"
                         >
-                            <span>☰</span> 菜单
+                            (强制重置)
                         </button>
                     </div>
-                )}
+                    )}
+                </div>
 
-                {/* Quick Actions Row */}
-                {!stats.isGameOver && (
-                    <QuickActions 
-                        onAction={(cmd) => handleCommand(undefined, cmd)} 
-                        disabled={isLoading || !!currentDilemma} 
-                        stats={stats}
-                    />
-                )}
+                <div className="bg-[#1a1a1a] p-2 border-t border-neutral-700 z-20 relative flex flex-col gap-2 shrink-0 pb-safe">
+                    
+                    {!stats.isGameOver && (
+                        <div className="flex justify-between items-center px-1 mb-1">
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => { playSound('click'); setShowAdvisor(true); }}
+                                    className="flex items-center gap-1 px-3 py-1 text-xs text-green-500/90 hover:text-green-400 bg-neutral-900 rounded border border-green-900/50 transition-colors"
+                                >
+                                    <span>☍</span> 战地顾问
+                                </button>
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    playSound('click');
+                                    setShowGameMenu(true);
+                                    setConfirmExit(false);
+                                }}
+                                className="flex items-center gap-1 px-3 py-1 text-xs text-neutral-400 hover:text-white bg-neutral-900 rounded border border-neutral-700 transition-colors"
+                            >
+                                <span>☰</span> 菜单
+                            </button>
+                        </div>
+                    )}
 
-                <form onSubmit={(e) => handleCommand(e)} className="relative flex gap-2" autoComplete="off">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 font-mono select-none">
-                        {'>'}
-                    </div>
-                    <input
-                        ref={inputRef}
-                        type="text"
-                        name="command"
-                        id="command-input"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onCompositionStart={() => isComposing.current = true}
-                        onCompositionEnd={() => isComposing.current = false}
-                        placeholder={stats.isGameOver ? "连接断开..." : (currentDilemma ? "等待抉择..." : (isLoading ? "通讯等待中..." : "下达命令..."))}
-                        disabled={stats.isGameOver || !!currentDilemma}
-                        autoComplete="off"
-                        autoCorrect="off"
-                        className="w-full bg-neutral-900 text-white pl-8 pr-4 py-2.5 rounded-md border border-neutral-700 focus:border-neutral-500 focus:outline-none font-mono placeholder-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm appearance-none"
-                    />
-                    <button 
-                        type="submit" 
-                        disabled={isLoading || stats.isGameOver || !!currentDilemma}
-                        className="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-4 py-2 rounded-md border border-neutral-700 font-medium transition-colors disabled:opacity-50 text-xs whitespace-nowrap"
-                    >
-                        {isLoading ? '...' : '发送'}
-                    </button>
-                </form>
-            </div>
-        </>
-      )}
+                    {/* Quick Actions Row */}
+                    {!stats.isGameOver && (
+                        <QuickActions 
+                            onAction={(cmd) => handleCommand(undefined, cmd)} 
+                            disabled={isLoading || !!currentDilemma} 
+                            stats={stats}
+                        />
+                    )}
+
+                    <form onSubmit={(e) => handleCommand(e)} className="relative flex gap-2" autoComplete="off">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 font-mono select-none">
+                            {'>'}
+                        </div>
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            name="command"
+                            id="command-input"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onCompositionStart={() => isComposing.current = true}
+                            onCompositionEnd={() => isComposing.current = false}
+                            placeholder={stats.isGameOver ? "连接断开..." : (currentDilemma ? "等待抉择..." : (isLoading ? "通讯等待中..." : "下达命令..."))}
+                            disabled={stats.isGameOver || !!currentDilemma}
+                            autoComplete="off"
+                            autoCorrect="off"
+                            className="w-full bg-neutral-900 text-white pl-8 pr-4 py-2.5 rounded-md border border-neutral-700 focus:border-neutral-500 focus:outline-none font-mono placeholder-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm appearance-none"
+                        />
+                        <button 
+                            type="submit" 
+                            disabled={isLoading || stats.isGameOver || !!currentDilemma}
+                            className="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 px-4 py-2 rounded-md border border-neutral-700 font-medium transition-colors disabled:opacity-50 text-xs whitespace-nowrap"
+                        >
+                            {isLoading ? '...' : '发送'}
+                        </button>
+                    </form>
+                </div>
+            </>
+          )}
+        </div>
     </div>
   );
 };

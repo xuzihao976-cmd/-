@@ -834,7 +834,7 @@ export const generateGameTurn = async (
                     actionType = "flag_warn";
                 } else {
                     timeCost = 30;
-                    actionType = "flag_success";
+                    actionType = "flag_success"; // CRITICAL: This type prevents AI override below
                     calculatedStats.hasFlagRaised = true;
                     calculatedStats.morale = Math.min(100, currentStats.morale + 30);
                     calculatedStats.minMorale = 30;
@@ -842,12 +842,16 @@ export const generateGameTurn = async (
                     siegeIncrease = 50; 
                 }
             } else {
-                narrativeParts.push("副官：‘长官，升旗必须去【屋顶】！’");
+                // Ensure we give explicit feedback and set an actionType so it doesn't default to 'idle' -> 'freeform AI'
+                narrativeParts.push("副官焦急地拦住你：“团附！这里无法升旗！请前往【屋顶】（视野开阔处），那里才是展示军魂的地方！”");
                 timeCost = 5;
+                actionType = "flag_fail"; 
             }
         } else {
-            narrativeParts.push("青天白日满地红已经在楼顶飘扬了。");
+             // Already raised
+            narrativeParts.push("那面青天白日满地红旗帜已经在楼顶飘扬，激励着苏州河两岸的每一个中国人。");
             timeCost = 5;
+            actionType = "flag_info";
         }
     }
     // 8. Speech
@@ -1204,6 +1208,11 @@ export const generateGameTurn = async (
         if (actionType === 'idle') {
             finalNarrative = await generateFreeformAIResponse(userCommand, {...currentStats, ...calculatedStats});
         } 
+        else if (actionType === 'flag_success') {
+            // FIX: Skip AI enhancement for the Flag Raising event.
+            // The hardcoded text is historically significant and dramatic; AI rewriting often shortens it or loses the specific flavor.
+            finalNarrative = fullLocalNarrative;
+        }
         else {
             finalNarrative = await enhanceNarrativeWithAI(
                 fullLocalNarrative,
