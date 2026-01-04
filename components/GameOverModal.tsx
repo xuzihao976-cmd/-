@@ -15,7 +15,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({ stats, onRestart, onExit 
   let borderColor = 'border-neutral-700';
   let bgColor = 'bg-neutral-900/10';
   let titleColor = 'text-neutral-500';
-  let icon = '🏁';
+  let icon: React.ReactNode = '🏁';
   let mainTitle = '战斗结束';
   let subTitle = 'GAME OVER';
 
@@ -40,7 +40,10 @@ const GameOverModal: React.FC<GameOverModalProps> = ({ stats, onRestart, onExit 
           borderColor = 'border-red-600';
           bgColor = 'bg-red-900/20';
           titleColor = 'text-red-500';
-          icon = '🇹🇼';
+          // Red block visual instead of flag emoji
+          icon = (
+              <div className="w-16 h-10 bg-red-700 shadow-[0_0_20px_rgba(220,38,38,0.8)] animate-pulse mx-auto transform -rotate-12 border border-red-900/50"></div>
+          );
           mainTitle = '血染孤旗';
           subTitle = '浩气长存 · ETERNAL GLORY';
           break;
@@ -80,7 +83,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({ stats, onRestart, onExit 
         {/* Background Effect */}
         <div className={`absolute inset-0 opacity-5 pointer-events-none ${borderColor.replace('border', 'bg')}`}></div>
 
-        <div className="text-6xl mb-2 filter drop-shadow-lg animate-bounce-slow">
+        <div className="text-6xl mb-2 filter drop-shadow-lg animate-bounce-slow flex justify-center items-center h-20">
             {icon}
         </div>
         

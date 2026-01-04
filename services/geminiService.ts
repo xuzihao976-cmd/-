@@ -5,7 +5,7 @@ import { GoogleGenAI } from "@google/genai";
 
 // Import Narrative Data Modules
 import { 
-    RAID_SUCCESS_TEXTS, RAID_FAIL_TEXTS, BAYONET_FIGHT_TEXTS, ATTACK_TEXTS, 
+    RAID_SUCCESS_TEXTS, RAID_FAIL_TEXTS, MASS_CHARGE_TEXTS, BAYONET_FIGHT_TEXTS, ATTACK_TEXTS, 
     WOUNDED_DEATH_SCENES, DEATH_FLAVOR_TEMPLATES, FORT_DAMAGE_SCENES 
 } from "../data/text/combat";
 
@@ -631,8 +631,46 @@ export const generateGameTurn = async (
     let actionType = "idle";
     let siegeIncrease = 5; 
     
-    // 1. RAID (Aggressive Action for Ending 2)
-    if (cmd.includes('突袭') || cmd.includes('夜袭') || cmd.includes('偷袭') || cmd.includes('反击') || cmd.includes('进攻')) {
+    // NEW LOGIC: MASS CHARGE / BREAKOUT (Prioritized over Raid)
+    if (matchIntent(cmd, ['反攻反攻', '突围', '杀出去', '决一死战', '全线反击', '冲锋'])) {
+        timeCost = 60;
+        actionType = "mass_charge";
+        visualEffect = "heavy-damage";
+        
+        // Huge Aggression Spike to trigger Defeat: Assault faster
+        const currentAggression = calculatedStats.aggressiveCount || currentStats.aggressiveCount || 0;
+        calculatedStats.aggressiveCount = currentAggression + 3;
+
+        // Realistic Heavy Casualties Logic (30-80 men lost per charge)
+        const baseLoss = 30;
+        const randomLoss = Math.floor(Math.random() * 50); 
+        const totalLoss = baseLoss + randomLoss;
+        const currentSoldiers = calculatedStats.soldiers ?? currentStats.soldiers;
+        
+        calculatedStats.soldiers = Math.max(0, currentSoldiers - totalLoss);
+        
+        // Massive Ammo Consumption
+        calculatedStats.ammo = Math.max(0, (calculatedStats.ammo ?? currentStats.ammo) - 5000);
+        calculatedStats.grenades = Math.max(0, (calculatedStats.grenades ?? currentStats.grenades) - 200);
+
+        // Morale Hit due to massacre
+        calculatedStats.morale = Math.max(0, (calculatedStats.morale ?? currentStats.morale) - 20);
+
+        handleSoldierDeaths(currentStats, calculatedStats, totalLoss, narrativeParts);
+        narrativeParts.push(pick(MASS_CHARGE_TEXTS));
+        
+        statsLog.push(`🔴 冲锋阵亡: ${totalLoss}人`);
+        statsLog.push(`💔 惨败溃逃: 士气 -20`);
+        statsLog.push(`🔻 弹药耗尽`);
+        
+        // Immediate check if this killed the player to ensure the correct ending plays next
+        if (calculatedStats.soldiers < 20) {
+            calculatedStats.isGameOver = true;
+            // The logic below will pick up defeat_assault because aggressiveCount is high
+        }
+    }
+    // 1. RAID (Standard Aggressive Action)
+    else if (cmd.includes('突袭') || cmd.includes('夜袭') || cmd.includes('偷袭') || cmd.includes('反击') || cmd.includes('进攻')) {
         const currentH = parseInt(currentStats.currentTime.split(':')[0]);
         // Track aggression
         calculatedStats.aggressiveCount = (currentStats.aggressiveCount || 0) + 1;
@@ -886,7 +924,7 @@ export const generateGameTurn = async (
     let damageType: 'INFANTRY' | 'ARTILLERY' | 'BOMBING' = "INFANTRY";
     let attackScale: 'SMALL' | 'MEDIUM' | 'LARGE' = 'SMALL';
     
-    if (newSiege > 10 && actionType !== 'idle') {
+    if (newSiege > 10 && actionType !== 'idle' && actionType !== 'mass_charge') { // mass_charge handles its own damage
         const riskRoll = Math.random() * 100;
         if (riskRoll < newSiege) {
             attackTriggered = true;
@@ -915,7 +953,7 @@ export const generateGameTurn = async (
     const flagActive = calculatedStats.hasFlagRaised ?? currentStats.hasFlagRaised;
     const currentHour = parseInt(nextTimeStr.split(':')[0]);
     
-    if (!attackTriggered && actionType !== 'idle') {
+    if (!attackTriggered && actionType !== 'idle' && actionType !== 'mass_charge') {
         if (flagActive && currentHour >= 6 && currentHour <= 17 && Math.random() < 0.4) { 
              attackTriggered = true;
              damageType = "BOMBING";
@@ -1264,4 +1302,3 @@ export const generateGameTurn = async (
         enemyIntel: ENEMY_INTEL_BY_DAY[Math.min(finalDay, 6)]
     };
 };
-    

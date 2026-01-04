@@ -91,7 +91,11 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ stats, enemyIntel }) => {
                     <span className="text-[8px] text-neutral-500 mb-0.5 scale-90 origin-right">国旗状态</span>
                     {stats.hasFlagRaised ? (
                         <div className="flex items-center gap-1 text-red-500 font-bold text-[10px] border border-red-900/50 px-2 py-0.5 bg-red-900/20 shadow-[0_0_8px_rgba(220,38,38,0.5)] rounded-sm">
-                            <span className="animate-pulse">⚑</span> 飘扬
+                            <span className="animate-pulse flex items-center justify-center">
+                                {/* Simple Red Block */}
+                                <div className="w-2.5 h-2 bg-red-600 shadow-sm"></div>
+                            </span> 
+                            飘扬
                         </div>
                     ) : (
                         <div className="flex items-center gap-1 text-neutral-200 font-bold text-[10px] border border-neutral-600 px-2 py-0.5 bg-neutral-800/80 shadow-[0_0_5px_rgba(255,255,255,0.1)] rounded-sm">

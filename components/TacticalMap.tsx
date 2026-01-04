@@ -95,13 +95,13 @@ const TacticalMap: React.FC<TacticalMapProps> = ({ stats, onAction, attackLocati
               {/* Roof visual hint */}
               {isRoof && <div className="absolute -top-4 left-0 right-0 h-4 bg-gradient-to-t from-neutral-800/20 to-transparent pointer-events-none"></div>}
               
-              {/* Flag Visual on Roof - Enhanced */}
+              {/* Flag Visual on Roof - Enhanced to Red Block */}
               {isRoof && (
                   <div className="absolute -top-5 right-4 z-20 flex flex-col items-center group/flag">
                        {showFlag ? (
                            <>
-                                <div className="relative z-10">
-                                    <span className="text-3xl sm:text-4xl leading-none animate-pulse drop-shadow-[0_0_15px_rgba(220,38,38,0.9)] origin-bottom-left -rotate-12 block transform transition-transform hover:scale-110 cursor-help" title="国旗已升起：士气+30，但会吸引日军轰炸">🇹🇼</span>
+                                <div className="relative z-10 w-8 h-5 bg-red-700 shadow-[0_0_15px_rgba(220,38,38,0.9)] animate-pulse origin-bottom-left -rotate-12 block transform transition-transform hover:scale-110 cursor-help" title="国旗已升起：士气+30，但会吸引日军轰炸">
+                                    {/* Simple Flag */}
                                 </div>
                                 <div className="w-1 h-8 bg-gradient-to-b from-neutral-300 to-neutral-600 shadow-lg mt-[-2px]"></div>
                                 <div className="w-4 h-1 bg-neutral-500 rounded-full mt-[-1px]"></div>
@@ -278,4 +278,3 @@ const TacticalMap: React.FC<TacticalMapProps> = ({ stats, onAction, attackLocati
 };
 
 export default TacticalMap;
-    
