@@ -32,7 +32,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ stats, enemyIntel }) => {
 
   return (
     <div className="bg-black border-b border-neutral-800 shadow-2xl sticky top-0 z-30">
-      <div className="max-w-4xl mx-auto flex flex-col">
+      <div className="max-w-md mx-auto flex flex-col">
         
         {/* Row 1: Intel & Siege (Merged) */}
         <div className="flex border-b border-neutral-800 h-7">

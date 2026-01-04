@@ -468,7 +468,7 @@ const App: React.FC = () => {
     visualEffect === 'heavy-damage' ? 'effect-shake effect-damage' : '';
 
   return (
-    <div className={`flex flex-col h-[100dvh] max-w-4xl mx-auto bg-[#111] text-[#ddd] overflow-hidden shadow-2xl border-x border-neutral-800 relative ${containerEffectClass}`}>
+    <div className={`flex flex-col h-[100dvh] max-w-md mx-auto bg-[#111] text-[#ddd] overflow-hidden shadow-2xl border-x border-neutral-800 relative ${containerEffectClass}`}>
       
       {/* Modals */}
       {showSaveLoadModal && (
