@@ -2,20 +2,35 @@
 // Simple Web Audio API Synthesizer for Retro SFX
 // No external files required.
 
-const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+// Lazy initialize audio context to prevent autoplay policy errors
+let audioCtx: AudioContext | null = null;
+
+const getAudioContext = () => {
+    if (!audioCtx) {
+        // @ts-ignore
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+        }
+    }
+    return audioCtx;
+};
 
 export const playSound = (type: 'type' | 'click' | 'alert' | 'explosion' | 'radio') => {
-    if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    if (ctx.state === 'suspended') {
+        ctx.resume().catch(e => console.warn("Audio resume failed", e));
     }
 
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
+    const osc = ctx.createOscillator();
+    const gainNode = ctx.createGain();
 
     osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
+    gainNode.connect(ctx.destination);
 
-    const now = audioCtx.currentTime;
+    const now = ctx.currentTime;
 
     if (type === 'type') {
         // High pitched short blip (Mechanical Typewriter tick)
@@ -48,21 +63,21 @@ export const playSound = (type: 'type' | 'click' | 'alert' | 'explosion' | 'radi
     }
     else if (type === 'explosion') {
         // Noise buffer for explosion
-        const bufferSize = audioCtx.sampleRate * 0.5; // 0.5 seconds
-        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const bufferSize = ctx.sampleRate * 0.5; // 0.5 seconds
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
             data[i] = Math.random() * 2 - 1;
         }
 
-        const noise = audioCtx.createBufferSource();
+        const noise = ctx.createBufferSource();
         noise.buffer = buffer;
-        const noiseGain = audioCtx.createGain();
+        const noiseGain = ctx.createGain();
         noise.connect(noiseGain);
-        noiseGain.connect(audioCtx.destination);
+        noiseGain.connect(ctx.destination);
         
         // Low pass filter to make it sound like a thud/boom
-        const filter = audioCtx.createBiquadFilter();
+        const filter = ctx.createBiquadFilter();
         filter.type = 'lowpass';
         filter.frequency.value = 100;
         noise.disconnect();
@@ -76,17 +91,17 @@ export const playSound = (type: 'type' | 'click' | 'alert' | 'explosion' | 'radi
     }
     else if (type === 'radio') {
         // Static noise for radio
-        const bufferSize = audioCtx.sampleRate * 0.2;
-        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const bufferSize = ctx.sampleRate * 0.2;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
             data[i] = Math.random() * 0.5 - 0.25;
         }
-        const noise = audioCtx.createBufferSource();
+        const noise = ctx.createBufferSource();
         noise.buffer = buffer;
         
         // High pass for "tinny" radio sound
-        const filter = audioCtx.createBiquadFilter();
+        const filter = ctx.createBiquadFilter();
         filter.type = 'highpass';
         filter.frequency.value = 1000;
         

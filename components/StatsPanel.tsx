@@ -130,7 +130,7 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ stats, enemyIntel }) => {
                     {stats.hmgSquads.map((squad, idx) => (
                         <div key={idx} className={`flex-1 flex items-center justify-between px-2 rounded border text-[10px] ${squad.status === 'active' ? 'border-orange-900/30 bg-orange-900/10' : 'border-red-900/50 bg-red-900/20 grayscale'}`} title="机枪连提供强大的防御加成。">
                             <div className="flex flex-col leading-none">
-                                <span className={`${squad.status === 'active' ? 'text-orange-500' : 'text-red-600 line-through'} font-bold`}>{squad.name}</span>
+                                <span className={`${squad.status === 'active' ? 'text-orange-500' : 'text-red-600 line-through'} font-bold font-yahei`}>{squad.name}</span>
                                 <span className="text-[8px] text-neutral-500 mt-0.5">{getLocCode(squad.location)}</span>
                             </div>
                             <span className={`font-mono font-bold text-xs ${squad.status === 'active' ? 'text-neutral-300' : 'text-red-600'}`}>
@@ -152,8 +152,8 @@ const StatsPanel: React.FC<StatsPanelProps> = ({ stats, enemyIntel }) => {
                 { l: '急救包', v: stats.medkits, c: stats.medkits < 10 ? 'text-red-500 animate-pulse' : 'text-green-700' }
              ].map((item, i) => (
                 <div key={i} className="flex-1 bg-black px-1 sm:px-2 rounded border border-neutral-800 flex flex-col justify-center items-center gap-0.5 min-w-0">
-                    <span className="text-[8px] text-neutral-500 font-bold scale-90 whitespace-nowrap">{item.l}</span>
-                    <span className={`text-[10px] sm:text-xs font-bold font-mono ${item.c}`}>{item.v}</span>
+                    <span className="text-[9px] text-neutral-500 font-bold scale-90 whitespace-nowrap font-yahei">{item.l}</span>
+                    <span className={`text-[10px] sm:text-xs font-bold font-yahei ${item.c}`}>{item.v}</span>
                 </div>
              ))}
         </div>

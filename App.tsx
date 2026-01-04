@@ -118,7 +118,13 @@ const App: React.FC = () => {
         let meta: SaveSlotMeta[] = [];
 
         if (indexJson) {
-            meta = JSON.parse(indexJson);
+            try {
+                meta = JSON.parse(indexJson);
+            } catch (err) {
+                console.warn("Save Index corrupt. Will try to rebuild or reset.", err);
+                // If index is corrupt, we treat it as empty but don't delete slots yet
+                meta = [];
+            }
         }
 
         const fullSlots: SaveSlotMeta[] = [];
@@ -133,6 +139,9 @@ const App: React.FC = () => {
         setSaveSlots(fullSlots);
     } catch (e) {
         console.error("Error refreshing save slots", e);
+        // Fallback to empty state so app doesn't crash
+        const emptySlots: SaveSlotMeta[] = Array.from({ length: MAX_SLOTS }, (_, i) => ({ id: i, isEmpty: true, savedAt: 0 }));
+        setSaveSlots(emptySlots);
     }
   };
 
@@ -169,25 +178,70 @@ const App: React.FC = () => {
         alert("战报已归档！");
     } catch (e) {
         console.error("Save failed", e);
-        alert("保存失败：存储空间可能已满。");
+        alert("保存失败：存储空间可能已满或权限不足。");
     }
+  };
+
+  const migrateSaveData = (loadedStats: any): GameStats => {
+      // Create a fresh default object to ensure all structure exists
+      const baseStats = { ...INITIAL_STATS };
+      
+      // Safety check: if loadedStats is somehow broken
+      if (!loadedStats) return baseStats;
+
+      return {
+          ...baseStats,
+          ...loadedStats,
+          
+          // CRITICAL FIX: Ensure complex objects are merged, not overwritten by undefined
+          // If the save file is missing 'hmgSquads', default to baseStats.hmgSquads (full squads), 
+          // NOT empty array, otherwise user loses HMGs after update.
+          hmgSquads: (loadedStats.hmgSquads && Array.isArray(loadedStats.hmgSquads) && loadedStats.hmgSquads.length > 0) 
+                     ? loadedStats.hmgSquads 
+                     : baseStats.hmgSquads,
+
+          roster: (loadedStats.roster && Array.isArray(loadedStats.roster)) 
+                  ? loadedStats.roster 
+                  : baseStats.roster,
+
+          fortificationLevel: { ...baseStats.fortificationLevel, ...(loadedStats.fortificationLevel || {}) },
+          fortificationBuildCounts: { ...baseStats.fortificationBuildCounts, ...(loadedStats.fortificationBuildCounts || {}) },
+          soldierDistribution: { ...baseStats.soldierDistribution, ...(loadedStats.soldierDistribution || {}) },
+          
+          usedTacticalCards: loadedStats.usedTacticalCards || [],
+          triggeredEvents: loadedStats.triggeredEvents || [],
+          
+          // Ensure new primitives are present
+          aggressiveCount: loadedStats.aggressiveCount ?? 0,
+          enemiesKilled: loadedStats.enemiesKilled ?? 0,
+          
+          // Ensure enums are valid
+          gameResult: loadedStats.gameResult || 'ongoing'
+      };
   };
 
   const handleLoadFromSlot = (slotId: number) => {
     try {
         playSound('click');
         const json = localStorage.getItem(SAVE_SLOT_PREFIX + slotId);
-        if (!json) return;
+        if (!json) {
+             alert("无法读取存档文件。");
+             return;
+        }
 
         const data: SaveData = JSON.parse(json);
-        setStats(data.stats);
+        
+        // MIGRATE DATA
+        const migratedStats = migrateSaveData(data.stats);
+        
+        setStats(migratedStats);
         setLogs(data.logs.map(l => ({ ...l, isTyping: false })));
         setView('GAME');
         setShowSaveLoadModal(false);
         setShowGameMenu(false);
     } catch (e) {
         console.error("Load failed", e);
-        alert("档案读取失败，文件可能已损毁。");
+        alert("档案读取失败，文件可能已损毁或不兼容当前版本。");
     }
   };
 
@@ -246,7 +300,7 @@ const App: React.FC = () => {
 
   const handleNewGame = async () => {
     playSound('click');
-    setStats(INITIAL_STATS);
+    setStats({...INITIAL_STATS}); // Use spread to ensure new object reference
     setLogs([]);
     setView('GAME');
     setShowGameMenu(false);

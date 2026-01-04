@@ -23,6 +23,30 @@ import {
 
 // --- Helper Functions ---
 
+// ROBUST API KEY RETRIEVAL FOR DEPLOYMENT
+// Supports standard Node process.env and Vite/Frontend import.meta.env
+const getApiKey = (): string | undefined => {
+    let key: string | undefined = undefined;
+
+    // 1. Try standard process.env (Node / Webpack / Some Cloud Envs)
+    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+        key = process.env.API_KEY;
+    }
+    
+    // 2. Try Vite / Modern Frontend env (This is usually required for deployed static sites)
+    // @ts-ignore
+    if (!key && typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
+        // @ts-ignore
+        key = import.meta.env.VITE_API_KEY;
+    }
+
+    if (!key) {
+        console.warn("Gemini Service: API Key is missing. Check environment variables (API_KEY or VITE_API_KEY).");
+    }
+
+    return key;
+};
+
 const matchIntent = (input: string, keywords: string[]): boolean => {
     return keywords.some(k => input.includes(k));
 };
@@ -32,7 +56,6 @@ const pick = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 // Conversational logic kept ONLY as offline fallback
 const getConversationalResponse = (input: string): string => {
     if (matchIntent(input, ['你是谁', '我是谁', '介绍', '名字', '身份', '穿越', '系统'])) return pick(GENERAL_CHATTER.META_IDENTITY);
-    // Removed DESERTION generic talk to allow specific ending triggers, but keeping generic if conditions not met
     if (matchIntent(input, ['电报', '师部', '命令', '消息', '孙元良', '顾祝同', '蒋', '上级', '无线电', '信号'])) return pick(GENERAL_CHATTER.RADIO_INTEL);
     if (matchIntent(input, ['杀', '拼', '干', '弄死', '击退', '冲锋', '进攻', '灭', '宰', '打死', '反击', '血'])) return pick(GENERAL_CHATTER.BLOODTHIRST);
     if (matchIntent(input, ['快', '慢', '加速', '没时间', '速度', '抓紧', '磨蹭', '来不及', '迅速'])) return pick(GENERAL_CHATTER.URGENCY);
@@ -199,10 +222,11 @@ const enhanceNarrativeWithAI = async (
     stats: GameStats,
     userCommand: string
 ): Promise<string> => {
-    if (!process.env.API_KEY) return originalNarrative;
+    const apiKey = getApiKey();
+    if (!apiKey) return originalNarrative;
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: apiKey });
         const systemPrompt = `
         Role: AI Narrator for "Lone Army: Sihang 1937".
         Task: Rewrite the provided text into a gritty, immersive war-novel style paragraph (50-100 words).
@@ -234,7 +258,8 @@ const enhanceNarrativeWithAI = async (
 
         return response.text || originalNarrative;
     } catch (error) {
-        return originalNarrative + " (AI 连接失败，显示原始战报)";
+        console.error("AI Generation Error", error);
+        return originalNarrative + " (AI 连接不稳定，显示原始战报)";
     }
 };
 
@@ -242,10 +267,11 @@ const generateFreeformAIResponse = async (
     userCommand: string,
     stats: GameStats
 ): Promise<string> => {
-    if (!process.env.API_KEY) return getConversationalResponse(userCommand);
+    const apiKey = getApiKey();
+    if (!apiKey) return getConversationalResponse(userCommand);
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: apiKey });
         const systemPrompt = `
         Role: Game Master for "Defense of Sihang Warehouse".
         Rules: 
@@ -272,6 +298,7 @@ const generateFreeformAIResponse = async (
 
         return response.text || "（AI 响应为空）";
     } catch (error) {
+        console.error("AI Freeform Error", error);
         return getConversationalResponse(userCommand);
     }
 };
@@ -280,10 +307,11 @@ export const generateAdvisorResponse = async (
     history: { role: string, text: string }[],
     userMessage: string
 ): Promise<string> => {
-    if (!process.env.API_KEY) return "（战地顾问离线）请检查 API Key 配置。";
+    const apiKey = getApiKey();
+    if (!apiKey) return "（战地顾问离线）请检查 API Key 配置。确认环境变量 VITE_API_KEY 已设置。";
 
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        const ai = new GoogleGenAI({ apiKey: apiKey });
         const systemInstruction = "你是一个纯文字互动冒险游戏《孤军：四行1937》的“战地顾问”。你的任务是为玩家解释游戏机制、胜利条件（坚持到第6天或兵力>20），或者提供历史背景知识。请用简短、专业的军人口吻回答。不要剧透具体事件的触发条件。";
         
         const chatHistory = history.map(h => ({
@@ -324,6 +352,8 @@ export const generateGameTurn = async (
     let dilemmaToTrigger: Dilemma | undefined = undefined;
     
     const cmd = userCommand.toLowerCase();
+    
+    const apiKey = getApiKey();
 
     // --- ENDING CHECK: RETREAT COMMANDS ---
     const isRetreat = matchIntent(cmd, ['跑', '逃', '撤退', '撤离', '离开', '走']);
@@ -830,7 +860,7 @@ export const generateGameTurn = async (
     }
     
     // --- IMMERSIVE CHAT FALLBACK ---
-    if (actionType === 'idle' && !process.env.API_KEY) {
+    if (actionType === 'idle' && !apiKey) {
         const chatResponse = getConversationalResponse(cmd);
         narrativeParts.push(chatResponse);
         timeCost = 0; 
@@ -1170,7 +1200,7 @@ export const generateGameTurn = async (
     let fullLocalNarrative = narrativeParts.join("");
     let finalNarrative = fullLocalNarrative;
     
-    if (process.env.API_KEY && !calculatedStats.isGameOver) {
+    if (getApiKey() && !calculatedStats.isGameOver) {
         if (actionType === 'idle') {
             finalNarrative = await generateFreeformAIResponse(userCommand, {...currentStats, ...calculatedStats});
         } 
