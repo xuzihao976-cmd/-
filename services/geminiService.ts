@@ -252,7 +252,7 @@ const enhanceNarrativeWithAI = async (
             config: {
                 systemInstruction: systemPrompt,
                 temperature: 0.7,
-                maxOutputTokens: 300
+                maxOutputTokens: 500
             }
         });
 
@@ -292,7 +292,7 @@ const generateFreeformAIResponse = async (
             config: {
                 systemInstruction: systemPrompt,
                 temperature: 0.6, 
-                maxOutputTokens: 300
+                maxOutputTokens: 500
             }
         });
 
@@ -632,7 +632,8 @@ export const generateGameTurn = async (
     let siegeIncrease = 5; 
     
     // NEW LOGIC: MASS CHARGE / BREAKOUT (Prioritized over Raid)
-    if (matchIntent(cmd, ['反攻反攻', '突围', '杀出去', '决一死战', '全线反击', '冲锋'])) {
+    // Updated trigger list to be more robust for aggressive colloquial commands
+    if (matchIntent(cmd, ['反攻', '突围', '杀出去', '决一死战', '全线反击', '冲锋', '打回去', '给老子打', '拼了'])) {
         timeCost = 60;
         actionType = "mass_charge";
         visualEffect = "heavy-damage";
@@ -1264,9 +1265,8 @@ export const generateGameTurn = async (
         if (actionType === 'idle') {
             finalNarrative = await generateFreeformAIResponse(userCommand, {...currentStats, ...calculatedStats});
         } 
-        else if (actionType === 'flag_success') {
-            // FIX: Skip AI enhancement for the Flag Raising event.
-            // The hardcoded text is historically significant and dramatic; AI rewriting often shortens it or loses the specific flavor.
+        else if (actionType === 'flag_success' || actionType === 'mass_charge') {
+            // FIX: Skip AI enhancement for specific event types to prevent summarization or cutting off long text.
             finalNarrative = fullLocalNarrative;
         }
         else {
