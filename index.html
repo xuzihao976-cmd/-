@@ -3,7 +3,7 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content" />
     <title>孤军：四行1937</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -14,6 +14,9 @@
         background-color: #111;
         color: #e5e5e5;
         overflow: hidden; /* Prevent body scroll on mobile */
+        height: 100%;
+        width: 100%;
+        position: fixed; /* Fix for iOS rubber banding */
       }
       
       .font-yahei {
@@ -103,9 +106,9 @@
   <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@18.3.1",
+    "react-dom/": "https://esm.sh/react-dom@18.3.1/",
+    "react/": "https://esm.sh/react@18.3.1/",
     "@google/genai": "https://esm.sh/@google/genai"
   }
 }

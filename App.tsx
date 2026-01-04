@@ -266,10 +266,13 @@ const App: React.FC = () => {
     }
   }, [logs, view, isLoading]);
 
-  // Focus Input
+  // Focus Input (Gentle focus)
   useEffect(() => {
     if (view === 'GAME' && !stats.isGameOver && !showSaveLoadModal && !showGameMenu && !showAdvisor && !currentDilemma) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+      // Check if already focused to avoid keyboard flickering on mobile
+      if (document.activeElement !== inputRef.current) {
+          setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 100);
+      }
     }
   }, [view, stats.isGameOver, showSaveLoadModal, showGameMenu, showAdvisor, currentDilemma]);
 
@@ -444,7 +447,10 @@ const App: React.FC = () => {
         setLogs(prev => [...prev, { id: Date.now().toString(), sender: 'system', text: "系统错误，请重试。", isTyping: false }]);
     } finally {
         setIsLoading(false);
-        if (!directCommand) setTimeout(() => inputRef.current?.focus(), 100);
+        if (!directCommand) {
+             // Only focus if we are not on mobile (detect via simple check) or gentle focus
+             // But for consistent UX, we rely on the useEffect.
+        }
     }
   };
 
@@ -468,7 +474,8 @@ const App: React.FC = () => {
     visualEffect === 'heavy-damage' ? 'effect-shake effect-damage' : '';
 
   return (
-    <div className={`flex flex-col h-[100dvh] max-w-md mx-auto bg-[#111] text-[#ddd] overflow-hidden shadow-2xl border-x border-neutral-800 relative ${containerEffectClass}`}>
+    // Fixed inset-0 is better for mobile keyboards than h-screen or 100dvh
+    <div className={`fixed inset-0 flex flex-col max-w-md mx-auto bg-[#111] text-[#ddd] overflow-hidden shadow-2xl border-x border-neutral-800 relative ${containerEffectClass}`}>
       
       {/* Modals */}
       {showSaveLoadModal && (
@@ -617,7 +624,7 @@ const App: React.FC = () => {
                 )}
             </div>
 
-            <div className="bg-[#1a1a1a] p-2 border-t border-neutral-700 z-20 relative flex flex-col gap-2 shrink-0">
+            <div className="bg-[#1a1a1a] p-2 border-t border-neutral-700 z-20 relative flex flex-col gap-2 shrink-0 pb-safe">
                 
                 {!stats.isGameOver && (
                     <div className="flex justify-between items-center px-1 mb-1">
@@ -651,13 +658,15 @@ const App: React.FC = () => {
                     />
                 )}
 
-                <form onSubmit={(e) => handleCommand(e)} className="relative flex gap-2">
+                <form onSubmit={(e) => handleCommand(e)} className="relative flex gap-2" autoComplete="off">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 font-mono select-none">
                         {'>'}
                     </div>
                     <input
                         ref={inputRef}
                         type="text"
+                        name="command"
+                        id="command-input"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onCompositionStart={() => isComposing.current = true}
@@ -666,8 +675,7 @@ const App: React.FC = () => {
                         disabled={stats.isGameOver || !!currentDilemma}
                         autoComplete="off"
                         autoCorrect="off"
-                        className="w-full bg-neutral-900 text-white pl-8 pr-4 py-2.5 rounded-md border border-neutral-700 focus:border-neutral-500 focus:outline-none font-mono placeholder-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-                        autoFocus
+                        className="w-full bg-neutral-900 text-white pl-8 pr-4 py-2.5 rounded-md border border-neutral-700 focus:border-neutral-500 focus:outline-none font-mono placeholder-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm appearance-none"
                     />
                     <button 
                         type="submit" 
