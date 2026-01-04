@@ -1,25 +1,27 @@
 
 import React from 'react';
-import { GameStats } from '../types';
+import { GameStats, Language } from '../types';
+import { UI_TEXT } from '../constants';
 
 interface QuickActionsProps {
   onAction: (cmd: string) => void;
   disabled: boolean;
   stats: GameStats;
+  lang: Language;
 }
 
-const QuickActions: React.FC<QuickActionsProps> = ({ onAction, disabled, stats }) => {
+const QuickActions: React.FC<QuickActionsProps> = ({ onAction, disabled, stats, lang }) => {
+  const T = UI_TEXT[lang];
   const actions = [
-    { label: '🛠️ 加固', cmd: `加固${stats.location}`, color: 'border-neutral-600 text-neutral-300' },
-    { label: '🔍 搜寻', cmd: '搜寻物资', color: 'border-zinc-600 text-zinc-400' },
-    { label: '🚑 救治', cmd: '治疗伤员', color: 'border-green-800 text-green-500' },
-    { label: '💤 休息', cmd: '休息整顿', color: 'border-blue-800 text-blue-400' },
-    { label: '📣 演讲', cmd: '演讲鼓舞', color: 'border-amber-800 text-amber-500' },
-    { label: '👀 侦察', cmd: '侦察敌情', color: 'border-cyan-900 text-cyan-500' },
-    { label: '🌙 夜袭', cmd: '火力突袭', color: 'border-purple-900 text-purple-400' }, 
+    { label: T.quick_fortify, cmd: `加固${stats.location}`, color: 'border-neutral-600 text-neutral-300' },
+    { label: T.quick_scavenge, cmd: '搜寻物资', color: 'border-zinc-600 text-zinc-400' },
+    { label: T.quick_heal, cmd: '治疗伤员', color: 'border-green-800 text-green-500' },
+    { label: T.quick_rest, cmd: '休息整顿', color: 'border-blue-800 text-blue-400' },
+    { label: T.quick_speech, cmd: '演讲鼓舞', color: 'border-amber-800 text-amber-500' },
+    { label: T.quick_scout, cmd: '侦察敌情', color: 'border-cyan-900 text-cyan-500' },
+    { label: T.quick_raid, cmd: '火力突袭', color: 'border-purple-900 text-purple-400' }, 
   ];
 
-  // Split into two rows to ensure a balanced, filled layout
   const row1 = actions.slice(0, 4);
   const row2 = actions.slice(4);
 
@@ -30,7 +32,6 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onAction, disabled, stats }
             key={act.label}
             onClick={() => onAction(act.cmd)}
             disabled={disabled}
-            // Removed active:scale-95, added active:opacity-70 for better touch feedback
             className={`flex-1 flex items-center justify-center whitespace-nowrap px-1 py-2.5 rounded border bg-neutral-900/80 hover:bg-neutral-800 text-[10px] sm:text-xs font-yahei font-bold transition-colors active:opacity-70 disabled:opacity-50 shadow-sm ${act.color}`}
         >
             {act.label}

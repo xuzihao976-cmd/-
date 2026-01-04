@@ -1,5 +1,6 @@
 
 export type Location = '地下室' | '一楼入口' | '二楼阵地' | '屋顶';
+export type Language = 'zh' | 'en'; // NEW: Language Support
 
 export interface HmgSquad {
     name: string; // "机枪一连"

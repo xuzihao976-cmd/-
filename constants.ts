@@ -1,7 +1,7 @@
 
-import { GameStats, Soldier, Achievement } from './types';
+import { GameStats, Soldier, Achievement, Language } from './types';
 
-const INITIAL_ROSTER: Soldier[] = [
+export const INITIAL_ROSTER: Soldier[] = [
     { id: 's1', name: '陈树生', origin: '湖北', trait: '敢死队', status: 'alive' },
     { id: 's2', name: '杨瑞符', origin: '天津', trait: '指挥官', status: 'alive' },
     { id: 's3', name: '万连卿', origin: '湖北', trait: '神枪手', status: 'alive' },
@@ -18,72 +18,205 @@ const INITIAL_ROSTER: Soldier[] = [
 
 export const INITIAL_STATS: GameStats = {
   location: '一楼入口',
-  
-  // 兵力重组：总数414
-  // 步兵: 354
-  // 机枪连: 60 (2支队伍 x 30人)
   soldiers: 354, 
   wounded: 0, 
   woundedTimer: 0, 
-  
   roster: INITIAL_ROSTER,
-
   hmgSquads: [
       { name: '机枪一连', location: '一楼入口', count: 30, status: 'active' },
       { name: '机枪二连', location: '二楼阵地', count: 30, status: 'active' }
   ],
-
-  morale: 80, // Start slightly lower for tutorial growth
+  morale: 80, 
   minMorale: 0, 
   health: 100,
-  day: 0, // Start at Day 0 (Prologue)
+  day: 0, 
   currentTime: "19:00", 
   turnCount: 0,
   lastRestTurn: 0,
-  
-  // New Mechanics Init
   tutorialStep: 0,
-  siegeMeter: 10, // Starts low
+  siegeMeter: 10, 
   activeTacticalCard: null,
-  
-  // 资源修正
   ammo: 45000,          
   machineGunAmmo: 18000,
   grenades: 1000,       
   sandbags: 5000,       
   medkits: 40,          
-
   hasFlagRaised: false,
   flagWarned: false,
   enemiesKilled: 0,
   triggeredEvents: [],
   usedTacticalCards: [],
-  aggressiveCount: 0, // New Stat for Ending 2
-  
-  // 步兵分布 
+  aggressiveCount: 0, 
   soldierDistribution: {
     '一楼入口': 140, 
     '二楼阵地': 180, 
     '屋顶': 10,      
     '地下室': 24     
   },
-
   fortificationLevel: {
     '一楼入口': 1,
     '二楼阵地': 1,
     '屋顶': 0,
     '地下室': 3
   },
-  
   fortificationBuildCounts: {
     '一楼入口': 2,
     '二楼阵地': 2,
     '屋顶': 0,
     '地下室': 6 
   },
-
   isGameOver: false,
   gameResult: 'ongoing'
+};
+
+// --- TRANSLATION DICTIONARY ---
+export const UI_TEXT = {
+    zh: {
+        newGame: "开始新战役",
+        loadGame: "读取作战记录",
+        achievements: "荣誉勋章墙",
+        version: "v1.4.2 | 沉浸式历史体验",
+        returnFront: "返回前线",
+        saveGame: "保存进度",
+        retreat: "撤出战场",
+        confirmRetreat: "确认撤离",
+        cancel: "取消",
+        advisor: "战地顾问",
+        menu: "菜单",
+        mapShow: "▲ 显示地图",
+        mapHide: "▼ 隐藏地图",
+        sendCommand: "发送",
+        placeholder: "下达命令...",
+        waiting: "通讯等待中...",
+        choice: "做出选择",
+        intel: "⚠ 敌情",
+        siege: "威胁值",
+        day: "日",
+        pos: "当前位置",
+        flagStatus: "国旗状态",
+        flagRaised: "飘扬",
+        flagNone: "暂未升起",
+        troops: "兵力",
+        wounded: "伤员",
+        morale: "士气",
+        hmg: "核心火力",
+        ammo79: "七九弹",
+        ammoMg: "机枪弹",
+        grenades: "手榴弹",
+        food: "粮包",
+        meds: "急救包",
+        integrity: "阵地状态",
+        gameOver: "确认结束战斗 - 查看战报",
+        victoryTitle: "战役胜利",
+        defeatTitle: "战斗结束",
+        survivors: "最终存活",
+        duration: "坚守时长",
+        rank: "历史评价",
+        kills: "击毙日军",
+        restart: "再次挑战",
+        backMenu: "返回主菜单",
+        saveSlot: "存档",
+        emptySlot: "-- 空白档案 --",
+        overwrite: "覆盖保存",
+        load: "读取进度",
+        quick_fortify: "🛠️ 加固",
+        quick_scavenge: "🔍 搜寻",
+        quick_heal: "🚑 救治",
+        quick_rest: "💤 休息",
+        quick_speech: "📣 演讲",
+        quick_scout: "👀 侦察",
+        quick_raid: "🌙 夜袭",
+        loc_roof: "屋顶",
+        loc_2f: "二楼阵地",
+        loc_1f: "一楼入口",
+        loc_b1: "地下室",
+        action_move: "🏃 移动至此",
+        action_build: "🛠️ 加固工事 (2h)",
+        action_flag: "⚑ 升起国旗 (危险)",
+        action_heal: "🚑 救治伤员 (1h)",
+        desc_roof: "视野极佳，但无遮挡。防空关键，易受重炮打击。",
+        desc_2f: "核心防御层，混凝土墙体，理想的射击掩体。",
+        desc_1f: "大门已封死。日军坦克和敢死队必经之路。",
+        desc_b1: "物资储备区与临时医院。墙壁最厚，防重炮。",
+        tac_roof: "适合升旗。需防空袭。",
+        tac_2f: "封锁桥面。主力机枪阵地。",
+        tac_1f: "绞肉机。需手榴弹防守。",
+        tac_b1: "后勤中枢。安全区。",
+        confirm_overwrite: "确认覆盖 存档 ",
+    },
+    en: {
+        newGame: "NEW CAMPAIGN",
+        loadGame: "LOAD WAR LOG",
+        achievements: "MEDALS OF VALOR",
+        version: "v1.4.2 | Immersive History Sim",
+        returnFront: "Return to Front",
+        saveGame: "Save Progress",
+        retreat: "Abandon Post",
+        confirmRetreat: "Confirm Retreat",
+        cancel: "Cancel",
+        advisor: "Advisor",
+        menu: "Menu",
+        mapShow: "▲ SHOW MAP",
+        mapHide: "▼ HIDE MAP",
+        sendCommand: "SEND",
+        placeholder: "Awaiting orders...",
+        waiting: "Connecting...",
+        choice: "Make Choice",
+        intel: "⚠ INTEL",
+        siege: "THREAT",
+        day: "Day ",
+        pos: "LOCATION",
+        flagStatus: "FLAG STATUS",
+        flagRaised: "RAISED",
+        flagNone: "LOWERED",
+        troops: "TROOPS",
+        wounded: "WOUNDED",
+        morale: "MORALE",
+        hmg: "HEAVY WEAPONS",
+        ammo79: "7.92mm",
+        ammoMg: "MG Ammo",
+        grenades: "Grenades",
+        food: "Rations",
+        meds: "Medkits",
+        integrity: "INTEGRITY",
+        gameOver: "CONFIRM CASUALTIES - VIEW REPORT",
+        victoryTitle: "VICTORY",
+        defeatTitle: "ACTION REPORT",
+        survivors: "Survivors",
+        duration: "Duration",
+        rank: "Evaluation",
+        kills: "Enemies Killed",
+        restart: "Replay",
+        backMenu: "Main Menu",
+        saveSlot: "Slot",
+        emptySlot: "-- EMPTY --",
+        overwrite: "OVERWRITE",
+        load: "LOAD",
+        quick_fortify: "🛠️ Fortify",
+        quick_scavenge: "🔍 Scavenge",
+        quick_heal: "🚑 Triage",
+        quick_rest: "💤 Rest",
+        quick_speech: "📣 Rally",
+        quick_scout: "👀 Scout",
+        quick_raid: "🌙 Raid",
+        loc_roof: "Rooftop",
+        loc_2f: "2F Position",
+        loc_1f: "1F Gate",
+        loc_b1: "Basement",
+        action_move: "🏃 Move Here",
+        action_build: "🛠️ Fortify (2h)",
+        action_flag: "⚑ Raise Flag (Risk)",
+        action_heal: "🚑 Treat Wounded (1h)",
+        desc_roof: "High visibility, zero cover. AA key point. Vulnerable to shelling.",
+        desc_2f: "Core defense layer. Concrete walls. Ideal firing ports.",
+        desc_1f: "Gate sealed. Choke point for IJA tanks and suicide squads.",
+        desc_b1: "Supply cache & makeshift hospital. Thickest walls. Artillery shelter.",
+        tac_roof: "Flag point. Watch for air raids.",
+        tac_2f: "Bridge denial. Main MG nest.",
+        tac_1f: "Kill zone. Needs grenades.",
+        tac_b1: "Logistics hub. Safe zone.",
+        confirm_overwrite: "Overwrite Slot ",
+    }
 };
 
 export const ACHIEVEMENTS: Achievement[] = [
@@ -120,8 +253,36 @@ export const ACHIEVEMENTS: Achievement[] = [
     }
 ];
 
-export const SYSTEM_INSTRUCTION = `
-你是一个纯文字互动冒险游戏《孤军：四行1937》的“游戏叙述者”。
-玩家扮演谢晋元团附，指挥国军第88师524团一营（共414人）。
-`;
-    
+export const ACHIEVEMENTS_EN: Achievement[] = [
+    {
+        id: 'victory_hold',
+        title: 'Impregnable',
+        icon: '🏰',
+        desc: 'Hold the warehouse until Day 6.'
+    },
+    {
+        id: 'victory_retreat',
+        title: 'The Retreat',
+        icon: '🌉',
+        desc: 'Retreat into the concession after Day 4 (Historical Ending).'
+    },
+    {
+        id: 'defeat_assault',
+        title: 'Total Assault',
+        icon: '⚔️',
+        desc: 'Launch frequent raids until the entire battalion is wiped out.'
+    },
+    {
+        id: 'defeat_martyr',
+        title: 'Bloodied Flag',
+        icon: '🇹🇼',
+        desc: 'Raise the flag and fight to the last man.'
+    },
+    {
+        id: 'defeat_deserter',
+        title: 'Coward',
+        icon: '🏳️',
+        desc: 'Attempt to desert in the early stages (Day 0-1).',
+        isSecret: true
+    }
+];

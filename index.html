@@ -11,18 +11,21 @@
       
       html, body {
         height: 100%;
+        width: 100%;
         margin: 0;
         padding: 0;
         /* Critical for mobile touch responsiveness */
-        touch-action: manipulation; 
+        touch-action: pan-x pan-y; 
         -webkit-tap-highlight-color: transparent;
+        /* Prevent pull-to-refresh / rubber banding on body which can lock inner scrolls */
+        overscroll-behavior: none;
+        overflow: hidden; 
       }
 
       body {
         font-family: 'Noto Serif SC', serif;
         background-color: #050505; /* Dark background for desktop margins */
         color: #e5e5e5;
-        overflow: hidden; /* App handles scrolling */
       }
       
       .font-yahei {
