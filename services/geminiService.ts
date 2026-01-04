@@ -157,7 +157,7 @@ const calculateScore = (stats: GameStats, endingType: EndingType): { rank: strin
     }
     
     if (endingType === 'defeat_assault') {
-        return { rank: "勇猛的莽夫", text: "你的勇气令人敬佩，但你的鲁莽葬送了全营。作为指挥官，你选择了最壮烈但也最惨痛的毁灭方式。" };
+        return { rank: "鲁莽的赌徒", text: "你违背了“死守”的初衷，频繁的盲目出击耗尽了部队的血液。作为指挥官，你把战争当成了赌博，最终输掉了所有人的性命和阵地，不仅未能有效牵制日军，反而导致了快速败亡。" };
     }
 
     if (endingType === 'defeat_martyr') {
@@ -1161,7 +1161,7 @@ export const generateGameTurn = async (
             calculatedStats.gameResult = 'defeat_assault';
             const report = calculateScore({ ...currentStats, ...calculatedStats }, 'defeat_assault');
             calculatedStats.finalRank = report.rank;
-            narrativeParts.push(`\n\n【全军覆没】\n在无休止的反击中，最后一名士兵也倒在了冲锋的路上。你的勇猛令人动容，但四行仓库最终失守。\n\n结局达成：【反攻的号角】\n${report.text}`);
+            narrativeParts.push(`\n\n【全军覆没】\n在连续且鲁莽的主动出击后，营地里已经没有能站起来的士兵了。日军轻松跨过了尸横遍野的防线。你的冲动不仅没能重创敌人，反而让四行仓库过早失守。\n\n结局达成：【反攻的号角】\n${report.text}`);
         }
         // CHECK ENDING 5: Martyr (Flag Raised + Death)
         else if (flagRaised) {
